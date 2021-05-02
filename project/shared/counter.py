@@ -12,3 +12,13 @@ def reduce_third_dimension(image):
         for j in range(len(image[i])):
             image[i][j] = image[i][j][0]
     return image
+
+
+def get_cell_index(pixel, cells):
+    for cell in cells:
+        try:
+            cell.index(pixel)
+            return cells.index(cell)
+        except ValueError:
+            pass
+    return -1
