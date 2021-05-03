@@ -1,6 +1,8 @@
 import sys
 import os
 import cv2
+import random
+import numpy as np
 
 HALF_MOORE_COORDINATES = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
 MIN_SIZE = 40
@@ -81,9 +83,55 @@ def reduce_cells(cells):
     return reduced_cells
 
 
-def main():
-    path_to_file = sys.argv[1] if len(sys.argv) > 1 else exit("Missing argument: path_to_file")
+def random_rgb(colour_list):
+    value = 0
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+    while value < 3:
+        value = 0
+        if (r, 'r') in colour_list:
+            r = random.randint(0, 255)
+        else:
+            value += 1
+        if (g, 'g') in colour_list:
+            g = random.randint(0, 255)
+        else:
+            value += 1
+        if (b, 'b') in colour_list:
+            b = random.randint(0, 255)
+        else:
+            value += 1
+    colour_list.append((r, 'r'))
+    colour_list.append((g, 'g'))
+    colour_list.append((b, 'b'))
+    return colour_list, [r, g, b]
 
+
+def segmentation(image, cells):
+    colour_list = []
+    for cell in cells:
+        colour_list, rgb = random_rgb(colour_list)
+        for pixel in cell:
+            image[pixel[0]][pixel[1]] = rgb
+            
+    return image
+
+
+def expand_image(image):
+    for i in range(len(image)):
+        for j in range(len(image[i])):
+            val = image[i][j]
+            image[i][j] = [val, val, val]
+    return image
+
+
+def main():
+    save = False
+    path_to_file = sys.argv[1] if len(sys.argv) > 1 else exit("Missing argument: path_to_file")
+    if len(sys.argv) > 2:
+        output = sys.argv[2]
+        save = True
     if os.path.exists(path_to_file) is False:
         exit("File not found: " + path_to_file)
     image = cv2.imread(path_to_file)
@@ -97,6 +145,14 @@ def main():
     cells = count_cells(buffered_image)
     reduced_cells = reduce_cells(cells)
     print('The image contains ', len(reduced_cells), ' cells.')
+    if save is True:
+        expanded_image = expand_image(image)
+        output_image = segmentation(expanded_image, reduced_cells)
+        output_image = np.array(output_image)
+        try:
+            cv2.imwrite(output, output_image)
+        except Exception:
+            exit('Path not found: ' + output)
 
 
 if __name__ == "__main__":
