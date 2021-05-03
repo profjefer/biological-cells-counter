@@ -3,6 +3,7 @@ import os
 import cv2
 
 HALF_MOORE_COORDINATES = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
+MIN_SIZE = 40
 
 
 def add_buffer(image):
@@ -72,6 +73,14 @@ def count_cells(image):
     return cells
 
 
+def reduce_cells(cells):
+    reduced_cells = []
+    for cell in cells:
+        if len(cell) > MIN_SIZE:
+            reduced_cells.append(cell)
+    return reduced_cells
+
+
 def main():
     path_to_file = sys.argv[1] if len(sys.argv) > 1 else exit("Missing argument: path_to_file")
 
@@ -86,8 +95,8 @@ def main():
     reduced_image = reduce_third_dimension(image)
     buffered_image = add_buffer(reduced_image)
     cells = count_cells(buffered_image)
-
-    print('The image contains ', len(cells), ' cells.')
+    reduced_cells = reduce_cells(cells)
+    print('The image contains ', len(reduced_cells), ' cells.')
 
 
 if __name__ == "__main__":
