@@ -1,3 +1,7 @@
+import sys
+import os
+import cv2
+
 HALF_MOORE_COORDINATES = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
 
 
@@ -55,3 +59,36 @@ def check_neighbours(submatrix, pixel, cells):
     neighbours = list(set(neighbours))
 
     return neighbours
+
+
+def count_cells(image):
+    cells = []
+    for r in range(1, int(len(image[0]) - 1)):
+        for c in range(1, int(len(image[1]) - 1)):
+            if image[r][c] == 255:
+                matrix = [row[c-1:c+2] for row in image[r-1:r+2]]
+                neighbours = check_neighbours(matrix, (r, c), cells)
+                cells = add_pixel_to_cells((r, c), cells, neighbours)
+    return cells
+
+
+def main():
+    path_to_file = sys.argv[1] if len(sys.argv) > 1 else exit("Missing argument: path_to_file")
+
+    if os.path.exists(path_to_file) is False:
+        exit("File not found: " + path_to_file)
+    image = cv2.imread(path_to_file)
+    try:
+        image = image.tolist()
+    except AttributeError:
+        exit("Wrong file format: " + path_to_file)
+
+    reduced_image = reduce_third_dimension(image)
+    buffered_image = add_buffer(reduced_image)
+    cells = count_cells(buffered_image)
+
+    print('The image contains ', len(cells), ' cells.')
+
+
+if __name__ == "__main__":
+    main()
