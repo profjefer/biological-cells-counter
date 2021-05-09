@@ -1,6 +1,3 @@
-import sys
-import os
-import cv2
 import random
 import numpy as np
 
@@ -65,14 +62,16 @@ def check_neighbours(submatrix, pixel, cells):
 
 
 def count_cells(image):
+    buffered_image = add_buffer(image)
     cells = []
-    for r in range(1, int(len(image[0]) - 1)):
-        for c in range(1, int(len(image[1]) - 1)):
-            if image[r][c] == 255:
-                matrix = [row[c-1:c+2] for row in image[r-1:r+2]]
+    for r in range(1, int(len(buffered_image[0]) - 1)):
+        for c in range(1, int(len(buffered_image[1]) - 1)):
+            if buffered_image[r][c] == 255:
+                matrix = [row[c-1:c+2] for row in buffered_image[r-1:r+2]]
                 neighbours = check_neighbours(matrix, (r, c), cells)
                 cells = add_pixel_to_cells((r, c), cells, neighbours)
-    return cells
+    reduced_cells = reduce_cells(cells)
+    return buffered_image, reduced_cells
 
 
 def reduce_cells(cells):
@@ -108,14 +107,15 @@ def random_rgb(colour_list):
     return colour_list, [r, g, b]
 
 
-def segmentation(image, cells):
+def change_cells_to_rgb(image, cells):
+    expanded_image = expand_image(image)
     colour_list = []
     for cell in cells:
         colour_list, rgb = random_rgb(colour_list)
         for pixel in cell:
-            image[pixel[0]][pixel[1]] = rgb
-            
-    return image
+            expanded_image[pixel[0]][pixel[1]] = rgb
+    output_image = np.array(expanded_image)
+    return output_image
 
 
 def expand_image(image):
@@ -124,36 +124,3 @@ def expand_image(image):
             val = image[i][j]
             image[i][j] = [val, val, val]
     return image
-
-
-def main():
-    save = False
-    path_to_file = sys.argv[1] if len(sys.argv) > 1 else exit("Missing argument: path_to_file")
-    if len(sys.argv) > 2:
-        output = sys.argv[2]
-        save = True
-    if os.path.exists(path_to_file) is False:
-        exit("File not found: " + path_to_file)
-    image = cv2.imread(path_to_file)
-    try:
-        image = image.tolist()
-    except AttributeError:
-        exit("Wrong file format: " + path_to_file)
-
-    reduced_image = reduce_third_dimension(image)
-    buffered_image = add_buffer(reduced_image)
-    cells = count_cells(buffered_image)
-    reduced_cells = reduce_cells(cells)
-    print('The image contains ', len(reduced_cells), ' cells.')
-    if save is True:
-        expanded_image = expand_image(image)
-        output_image = segmentation(expanded_image, reduced_cells)
-        output_image = np.array(output_image)
-        try:
-            cv2.imwrite(output, output_image)
-        except Exception:
-            exit('Path not found: ' + output)
-
-
-if __name__ == "__main__":
-    main()
