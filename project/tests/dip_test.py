@@ -30,6 +30,9 @@ def main():
     for file in files:
         path_to_image = '../../train_set/' + file + '/images/' + file + '.png'
         print(f'Path to file: {path_to_image}')
+        if os.path.exists(path_to_image) is False:
+            print(colored(f'File not found', 'red'))
+            continue
         try:
             image = cv2.imread(path_to_image, cv2.CV_8UC1)
             prepared_image = segmentation(image)
@@ -47,7 +50,7 @@ def main():
             print(colored(e, 'red'))
             print(colored('TEST FAIL', 'red'))
 
-    avg = sum(effectiveness)/len(effectiveness)
+    avg = sum(effectiveness)/len(effectiveness) if len(effectiveness) > 0 else 0
     print()
     print('SUMMARY')
     print(f'Succeeded tests: {number_of_tests/len(files)}')
